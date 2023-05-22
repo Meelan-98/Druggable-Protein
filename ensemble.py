@@ -132,7 +132,7 @@ def get_model(model_name):
 
 def ensemble_pipeline():
     
-    data_names = ["AAC","CTD","PAAC","DPC"]
+    data_names = ["APAAC","AAC","CTD","PAAC"]
     models = ["Naive Bayes","Logistic Regression","Random Forest"]
 
     results = []
@@ -158,7 +158,9 @@ def ensemble_pipeline():
     for i in range(1,len(data_names)):
         sum_array = sum_array + results[i]
 
-    combined_array = np.where(sum_array >= 2, 1, 0)
+    voting_threshold = len(data_names)-1
+
+    combined_array = np.where(sum_array >= voting_threshold, 1, 0)
 
     accuracy = accuracy_score(full_test_y, combined_array)
     sensitivity = recall_score(full_test_y, combined_array)
