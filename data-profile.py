@@ -1,20 +1,28 @@
 import pandas as pd
 from pandas_profiling import ProfileReport
 
-DATA_PATH = "dataset/"
-FEATURE = "CTD"
+Features = ["AAC","DPC","PAAC"]
 
-train_neg = pd.read_csv(DATA_PATH + FEATURE + "_TR_neg_SPIDER.csv")
-train_pos = pd.read_csv(DATA_PATH + FEATURE + "_TR_pos_SPIDER.csv")
-test_neg = pd.read_csv(DATA_PATH + FEATURE + "_TS_neg_SPIDER.csv")
-test_pos = pd.read_csv(DATA_PATH + FEATURE + "_TS_pos_SPIDER.csv")
+def create_report(FEATURE):
 
-train_frames = [train_neg, train_pos]
-test_frames = [test_neg, test_pos]
+    DATA_PATH = "dataset/"
 
-train_df= pd.concat(train_frames)
-test_df = pd.concat(test_frames)
+    train_neg = pd.read_csv(DATA_PATH + FEATURE + "_TR_neg_SPIDER.csv")
+    train_pos = pd.read_csv(DATA_PATH + FEATURE + "_TR_pos_SPIDER.csv")
+    test_neg = pd.read_csv(DATA_PATH + FEATURE + "_TS_neg_SPIDER.csv")
+    test_pos = pd.read_csv(DATA_PATH + FEATURE + "_TS_pos_SPIDER.csv")
 
-profile = ProfileReport(train_df)
+    train_frames = [train_neg, train_pos]
+    test_frames = [test_neg, test_pos]
 
-profile.to_file("report.html")
+    train_df= pd.concat(train_frames)
+    test_df = pd.concat(test_frames)
+
+    profile = ProfileReport(train_df)
+
+    name = FEATURE + "_report.html"
+
+    profile.to_file(name)
+
+for feature in Features:
+    create_report(feature)

@@ -19,3 +19,15 @@
 ```
     pip3 install -r requirements.txt
 ```
+
+### Run the classifier
+
+```
+    python classify.py
+```
+
+### Run the report generator
+
+```
+    python data-profile.py
+```
