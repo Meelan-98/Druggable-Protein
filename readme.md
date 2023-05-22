@@ -23,7 +23,7 @@
 ### Run the classifier
 
 ```
-    python classifier-tool.py
+    python3 classifier-tool.py TR_neg_SPIDER TR_pos_SPIDER TS_neg_SPIDER TS_pos_SPIDER
 ```
 
 ### Run the report generator
