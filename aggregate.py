@@ -6,8 +6,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -76,34 +74,84 @@ def process_data():
     test_features = test_final.drop('druggable', axis=1)  
     test_target = test_final['druggable']
 
-    pca = PCA(n_components=25) 
+    n_components = 50
+
+    pca = PCA(n_components) 
 
     pca_train = pca.fit_transform(train_features)
     pca_test = pca.transform(test_features)
 
     columns =[]
-    for i in range(25):
+    for i in range(n_components):
         columns.append("Column_"+str(i))
 
     train_dataframe = pd.DataFrame(pca_train,columns=columns)
     test_dataframe  = pd.DataFrame(pca_test,columns=columns)
 
-    train_dataframe = pd.merge(train_dataframe,train_target,left_index=True,right_index=True)
-    test_dataframe = pd.merge(test_dataframe,test_target,left_index=True,right_index=True)
+    train_d = pd.merge(train_dataframe,train_target,left_index=True,right_index=True)
+    test_d = pd.merge(test_dataframe,test_target,left_index=True,right_index=True)
 
+    return([train_d,test_d,[test_df['seq_name'].tolist(),0]])
 
-    return([train_dataframe,test_dataframe,[test_df['seq_name'].tolist(),0]])
+def get_predictor(models,dataset):
 
-def classify_data(dataset,classify_type):
+    best_model = find_best_model(dataset,models)
 
-    full_train_X = dataset.iloc[:,:-1]
-    full_train_y = dataset.iloc[:,-1:]
+    full_train_X = dataset.drop('druggable', axis=1)
+    full_train_y = dataset['druggable']
 
-    full_model = get_model(classify_type)
+    print("Most Suitable predictor is :",best_model)
 
-    full_model.fit(full_train_X, full_train_y)
+    predictor = get_model(best_model)
 
-    return(full_model)
+    predictor.fit(full_train_X, full_train_y)
+
+    return(predictor)
+
+def find_best_model(dataset,models):
+
+    max_acc = 0
+    best_model = ""
+
+    for model_name in models:
+    
+        accuracies = []
+
+        num_folds = 5
+
+        kf = KFold(n_splits=num_folds, shuffle=True)
+        fold_indices = kf.split(dataset)
+
+        for fold, (train_indices, test_indices) in enumerate(fold_indices):
+
+            train_data = dataset.iloc[train_indices]
+            test_data = dataset.iloc[test_indices]
+
+            train_X = train_data.drop('druggable', axis=1)
+            train_y = train_data['druggable']
+
+            test_X = test_data.drop('druggable', axis=1)
+            test_y = test_data['druggable']
+
+            model = get_model(model_name)
+
+            model.fit(train_X, train_y)
+
+            y_pred = model.predict(test_X)
+
+            accuracy = accuracy_score(test_y, y_pred)
+
+            print("accuracy for ",model_name,accuracy)
+
+            accuracies.append(accuracy)
+
+        avg_acc = sum(accuracies) / len(accuracies)
+        
+        if (avg_acc > max_acc):
+            max_acc = avg_acc
+            best_model = model_name
+        
+    return(best_model)
 
 def get_model(model_name):
 
@@ -117,29 +165,33 @@ def get_model(model_name):
 
     elif(model_name=="Decision Trees"):
 
-        model = DecisionTreeClassifier(max_iter=500)
+        model = DecisionTreeClassifier()
 
     elif(model_name=="Random Forest"):
 
-        model = RandomForestClassifier(max_iter=500)
+        model = RandomForestClassifier()
     
     elif(model_name=="Naive Bayes"):
 
-        model = GaussianNB(max_iter=500)
+        model = GaussianNB()
     
     elif(model_name=="K-Nearest Neighbor"):
 
-        model = KNeighborsClassifier(max_iter=500)
+        model = KNeighborsClassifier()
 
     return(model)
 
 def aggregate_pipeline():
+
+    models = ["Naive Bayes","Logistic Regression","Random Forest"]
     
     dataset = process_data()
-    model = classify_data(dataset[0],"Logistic Regression")
+    model = get_predictor(models,dataset[0])
 
-    full_test_X = dataset[1].iloc[:,:-1]
-    full_test_y = dataset[1].iloc[:,-1:]
+    testData = dataset[1]
+
+    full_test_X = testData.drop(columns=['druggable'], axis=1)
+    full_test_y = testData['druggable']
 
     prediction = model.predict(full_test_X)
 
@@ -172,5 +224,6 @@ def aggregate_pipeline():
 
     with open("predictions_neg.txt", 'w') as file:
         file.write(negatives)
+
 
 
