@@ -52,7 +52,6 @@ def classify_data(dataset,classify_type):
 
     num_folds = 5
 
-    # Split the dataset into folds using KFold
     kf = KFold(n_splits=num_folds, shuffle=True)
     fold_indices = kf.split(dataset)
 

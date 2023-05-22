@@ -7,7 +7,7 @@ print("Welcome to the druggable protein identifier pipeline")
 
 choice = [
     inquirer.List('option',
-                message="Select a Classification Method :",
+                message="Select a Classification Method ",
                 choices=['Ensemble Model','Aggregated Features']
                 )
 ]

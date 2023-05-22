@@ -50,7 +50,7 @@ def process_data():
     columns.remove("seq_name")
 
     train_set = train_df.drop(['seq_name'] , axis=1)
-    test_set = train_df.drop(['seq_name'] , axis=1)
+    test_set = test_df.drop(['seq_name'] , axis=1)
 
     train_final = train_set.copy()
     test_final = test_set.copy()
@@ -68,12 +68,12 @@ def process_data():
     test_features = test_final.drop('druggable', axis=1)  
     test_target = test_final['druggable']
 
-    pca = PCA(n_components=50) 
+    pca = PCA(n_components=25) 
 
     pca_train = pca.fit_transform(train_features)
     pca_test = pca.transform(test_features)
 
-    return([[pca_train,train_target],[pca_test,test_target]])
+    return([[pca_train,train_target],[pca_test,test_target],[test_df['seq_name'].tolist(),0]])
 
 def classify_data(dataset,classify_type):
 
@@ -90,11 +90,11 @@ def get_model(model_name):
 
     if(model_name=="Logistic Regression"):
 
-        model = LogisticRegression(max_iter=100)
+        model = LogisticRegression(max_iter=500)
     
     elif(model_name=="Support Vector Machines"):
 
-        model = LinearSVC(max_iter=1000)
+        model = LinearSVC(max_iter=500)
 
     elif(model_name=="Decision Trees"):
 
@@ -124,9 +124,9 @@ def aggregate_pipeline():
 
     prediction = model.predict(full_test_X)
 
-    # sequence_data = testData['seq_name'].tolist()
-    # positives = ""
-    # negatives = ""
+    sequence_data = dataset[2][0]
+    positives = ""
+    negatives = ""
 
     accuracy = accuracy_score(full_test_y, prediction)
     sensitivity = recall_score(full_test_y, prediction)
@@ -141,17 +141,17 @@ def aggregate_pipeline():
     print("Overall F1_measure :",f1_measure)
 
 
-    # for count in range(0,len(prediction)):
+    for count in range(0,len(prediction)):
 
-    #     if prediction[count] == 1 :
-    #         positives = positives + str(sequence_data[count]) + "\n"
-    #     else:
-    #         negatives = negatives + str(sequence_data[count]) + "\n"
+        if prediction[count] == 1 :
+            positives = positives + str(sequence_data[count]) + "\n"
+        else:
+            negatives = negatives + str(sequence_data[count]) + "\n"
 
-    # with open("predictions_pos.txt", 'w') as file:
-    #     file.write(positives)
+    with open("predictions_pos.txt", 'w') as file:
+        file.write(positives)
 
-    # with open("predictions_neg.txt", 'w') as file:
-    #     file.write(negatives)
+    with open("predictions_neg.txt", 'w') as file:
+        file.write(negatives)
 
 
