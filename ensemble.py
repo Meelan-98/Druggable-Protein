@@ -132,8 +132,8 @@ def get_model(model_name):
 
 def ensemble_pipeline():
     
-    data_names = ["AAC","DPC","PAAC"]
-    models = ["Naive Bayes","Random Forest","Logistic Regression"]
+    data_names = ["AAC","CTD","PAAC","DPC"]
+    models = ["Naive Bayes","Logistic Regression","Random Forest"]
 
     results = []
 
