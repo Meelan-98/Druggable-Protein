@@ -128,7 +128,7 @@ def get_model(model_name):
     
     elif(model_name=="Support Vector Machines"):
 
-        model = LinearSVC(max_iter=1000)
+        model = LinearSVC(max_iter=1500)
 
     elif(model_name=="Decision Trees"):
 
@@ -150,7 +150,7 @@ def get_model(model_name):
 
 def aggregate_pipeline():
 
-    models = ["Naive Bayes","Logistic Regression","Random Forest","K-Nearest Neighbor","Decision Trees"]
+    models = ["Support Vector Machines","Naive Bayes","Logistic Regression","Random Forest","K-Nearest Neighbor","Decision Trees"]
     
     dataset = process_data()
     model = get_predictor(models,dataset[0])
