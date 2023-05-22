@@ -23,7 +23,7 @@
 ### Run the classifier
 
 ```
-    python classify.py
+    python classifier-tool.py
 ```
 
 ### Run the report generator
