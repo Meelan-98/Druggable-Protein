@@ -81,12 +81,23 @@ def process_data():
     pca_train = pca.fit_transform(train_features)
     pca_test = pca.transform(test_features)
 
-    return([[pca_train,train_target],[pca_test,test_target],[test_df['seq_name'].tolist(),0]])
+    columns =[]
+    for i in range(25):
+        columns.append("Column_"+str(i))
+
+    train_dataframe = pd.DataFrame(pca_train,columns=columns)
+    test_dataframe  = pd.DataFrame(pca_test,columns=columns)
+
+    train_dataframe = pd.merge(train_dataframe,train_target,left_index=True,right_index=True)
+    test_dataframe = pd.merge(test_dataframe,test_target,left_index=True,right_index=True)
+
+
+    return([train_dataframe,test_dataframe,[test_df['seq_name'].tolist(),0]])
 
 def classify_data(dataset,classify_type):
 
-    full_train_X = dataset[0]
-    full_train_y = dataset[1]
+    full_train_X = dataset.iloc[:,:-1]
+    full_train_y = dataset.iloc[:,-1:]
 
     full_model = get_model(classify_type)
 
@@ -127,8 +138,8 @@ def aggregate_pipeline():
     dataset = process_data()
     model = classify_data(dataset[0],"Logistic Regression")
 
-    full_test_X = dataset[1][0]
-    full_test_y = dataset[1][1]
+    full_test_X = dataset[1].iloc[:,:-1]
+    full_test_y = dataset[1].iloc[:,-1:]
 
     prediction = model.predict(full_test_X)
 
