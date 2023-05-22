@@ -31,10 +31,10 @@ def process_data(dataname):
     columns.remove("seq_name")
 
     train_set = train_df.drop(['seq_name'] , axis=1)
-    test_set = test_df.drop(['seq_name'] , axis=1)
+    # test_set = test_df.drop(['seq_name'] , axis=1)
 
     train_final = train_set.copy()
-    test_final = test_set.copy()
+    test_final = test_df.copy()
 
     for column in columns:
         mean = train_set[column].mean()
@@ -115,7 +115,7 @@ def get_model(model_name):
     return(model)
 
 
-data_names = ["AAC","CTD","DPC","PAAC"]
+data_names = ["AAC","DPC","PAAC"]
 classifier = {"AAC":"Logistic Regression","CTD":"Logistic Regression","DPC":"Logistic Regression","PAAC":"Logistic Regression"}
 
 results = []
@@ -127,10 +127,14 @@ for d_name in data_names:
 
     testData = dataset[1]
 
-    full_test_X = testData.drop('druggable', axis=1)
+    full_test_X = testData.drop(columns=['seq_name', 'druggable'], axis=1)
     full_test_y = testData['druggable']
 
     results.append(model.predict(full_test_X))
+
+sequence_data = testData['seq_name'].tolist()
+positives = ""
+negatives = ""
 
 sum_array = results[0]
 
@@ -150,3 +154,19 @@ print("Overall Sensitivity :",sensitivity)
 print("Overall Specificity :",specificity)
 print("Overall Precision :",precision)
 print("Overall F1_measure :",f1_measure)
+
+
+for count in range(0,len(combined_array)):
+
+    if combined_array[count] == 1 :
+        positives = positives + str(sequence_data[count]) + "\n"
+    else:
+        negatives = negatives + str(sequence_data[count]) + "\n"
+
+with open("predictions_pos.txt", 'w') as file:
+    file.write(positives)
+
+with open("predictions_neg.txt", 'w') as file:
+    file.write(negatives)
+
+

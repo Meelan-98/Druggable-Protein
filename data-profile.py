@@ -2,7 +2,7 @@ import pandas as pd
 from pandas_profiling import ProfileReport
 
 DATA_PATH = "dataset/"
-FEATURE = "AAC"
+FEATURE = "CTD"
 
 train_neg = pd.read_csv(DATA_PATH + FEATURE + "_TR_neg_SPIDER.csv")
 train_pos = pd.read_csv(DATA_PATH + FEATURE + "_TR_pos_SPIDER.csv")
