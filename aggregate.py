@@ -28,16 +28,24 @@ def process_data():
     train_pos_aac = pd.read_csv(DATA_PATH + "AAC" + "_TR_pos_SPIDER.csv")
     test_neg_aac = pd.read_csv(DATA_PATH + "AAC" + "_TS_neg_SPIDER.csv")
     test_pos_aac = pd.read_csv(DATA_PATH + "AAC" + "_TS_pos_SPIDER.csv")
+    train_neg_apaac = pd.read_csv(DATA_PATH + "APAAC" + "_TR_neg_SPIDER.csv")
+    train_pos_apaac = pd.read_csv(DATA_PATH + "APAAC" + "_TR_pos_SPIDER.csv")
+    test_neg_apaac = pd.read_csv(DATA_PATH + "APAAC" + "_TS_neg_SPIDER.csv")
+    test_pos_apaac = pd.read_csv(DATA_PATH + "APAAC" + "_TS_pos_SPIDER.csv")
 
-    train_pos_temp = pd.merge(train_pos_ctd,train_pos_paac,on="seq_name")
-    test_pos_temp = pd.merge(test_pos_ctd,test_pos_paac,on="seq_name")
-    train_pos = pd.merge(train_pos_temp,train_pos_aac,on="seq_name")
-    test_pos = pd.merge(test_pos_temp,test_pos_aac,on="seq_name")
-
-    train_neg_temp = pd.merge(train_neg_ctd,train_neg_paac,on="seq_name")
-    test_neg_temp = pd.merge(test_neg_ctd,test_neg_paac,on="seq_name")
-    train_neg = pd.merge(train_neg_temp,train_neg_aac,on="seq_name")
-    test_neg = pd.merge(test_neg_temp,test_neg_aac,on="seq_name")
+    train_pos_temp = pd.merge(train_pos_ctd,train_pos_paac,on=["seq_name","druggable"])
+    test_pos_temp = pd.merge(test_pos_ctd,test_pos_paac,on=["seq_name","druggable"])
+    train_pos_temp2 = pd.merge(train_pos_temp,train_pos_aac,on=["seq_name","druggable"])
+    test_pos_temp2 = pd.merge(test_pos_temp,test_pos_aac,on=["seq_name","druggable"])
+    train_pos = pd.merge(train_pos_temp2,train_pos_apaac,on=["seq_name","druggable"])
+    test_pos = pd.merge(test_pos_temp2,test_pos_apaac,on=["seq_name","druggable"])
+    
+    train_neg_temp = pd.merge(train_neg_ctd,train_neg_paac,on=["seq_name","druggable"])
+    test_neg_temp = pd.merge(test_neg_ctd,test_neg_paac,on=["seq_name","druggable"])
+    train_neg_temp2 = pd.merge(train_neg_temp,train_neg_aac,on=["seq_name","druggable"])
+    test_neg_temp2 = pd.merge(test_neg_temp,train_neg_aac,on=["seq_name","druggable"])
+    train_neg = pd.merge(train_neg_temp2,train_neg_apaac,on=["seq_name","druggable"])
+    test_neg = pd.merge(test_neg_temp2,test_neg_apaac,on=["seq_name","druggable"])
 
     train_frames = [train_neg, train_pos]
     test_frames = [test_neg, test_pos]
