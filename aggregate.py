@@ -141,8 +141,6 @@ def find_best_model(dataset,models):
 
             accuracy = accuracy_score(test_y, y_pred)
 
-            print("accuracy for ",model_name,accuracy)
-
             accuracies.append(accuracy)
 
         avg_acc = sum(accuracies) / len(accuracies)
@@ -161,7 +159,7 @@ def get_model(model_name):
     
     elif(model_name=="Support Vector Machines"):
 
-        model = LinearSVC(max_iter=500)
+        model = LinearSVC(max_iter=1000)
 
     elif(model_name=="Decision Trees"):
 
@@ -183,7 +181,7 @@ def get_model(model_name):
 
 def aggregate_pipeline():
 
-    models = ["Naive Bayes","Logistic Regression","Random Forest"]
+    models = ["Naive Bayes","Logistic Regression","Random Forest","K-Nearest Neighbor","Decision Trees"]
     
     dataset = process_data()
     model = get_predictor(models,dataset[0])
