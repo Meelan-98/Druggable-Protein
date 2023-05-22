@@ -43,7 +43,7 @@ def process_data():
     train_neg_temp = pd.merge(train_neg_ctd,train_neg_paac,on=["seq_name","druggable"])
     test_neg_temp = pd.merge(test_neg_ctd,test_neg_paac,on=["seq_name","druggable"])
     train_neg_temp2 = pd.merge(train_neg_temp,train_neg_aac,on=["seq_name","druggable"])
-    test_neg_temp2 = pd.merge(test_neg_temp,train_neg_aac,on=["seq_name","druggable"])
+    test_neg_temp2 = pd.merge(test_neg_temp,test_neg_aac,on=["seq_name","druggable"])
     train_neg = pd.merge(train_neg_temp2,train_neg_apaac,on=["seq_name","druggable"])
     test_neg = pd.merge(test_neg_temp2,test_neg_apaac,on=["seq_name","druggable"])
 
