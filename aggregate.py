@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold,cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.decomposition import PCA
+import numpy as np
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
@@ -81,24 +82,14 @@ def process_data():
     pca_train = pca.fit_transform(train_features)
     pca_test = pca.transform(test_features)
 
-    columns =[]
-    for i in range(n_components):
-        columns.append("Column_"+str(i))
-
-    train_dataframe = pd.DataFrame(pca_train,columns=columns)
-    test_dataframe  = pd.DataFrame(pca_test,columns=columns)
-
-    train_d = pd.merge(train_dataframe,train_target,left_index=True,right_index=True)
-    test_d = pd.merge(test_dataframe,test_target,left_index=True,right_index=True)
-
-    return([train_d,test_d,[test_df['seq_name'].tolist(),0]])
+    return([[pca_train,train_target],[pca_test,test_target],[test_df['seq_name'].tolist(),0]])
 
 def get_predictor(models,dataset):
 
     best_model = find_best_model(dataset,models)
 
-    full_train_X = dataset.drop('druggable', axis=1)
-    full_train_y = dataset['druggable']
+    full_train_X = dataset[0]
+    full_train_y = dataset[1]
 
     print("Most Suitable predictor is :",best_model)
 
@@ -114,39 +105,17 @@ def find_best_model(dataset,models):
     best_model = ""
 
     for model_name in models:
-    
-        accuracies = []
 
-        num_folds = 5
+        model = get_model(model_name)
 
-        kf = KFold(n_splits=num_folds, shuffle=True)
-        fold_indices = kf.split(dataset)
+        kfold = KFold(n_splits=5, shuffle=True, random_state=42)
 
-        for fold, (train_indices, test_indices) in enumerate(fold_indices):
+        scores = cross_val_score(model, dataset[0], dataset[1], cv=kfold)
 
-            train_data = dataset.iloc[train_indices]
-            test_data = dataset.iloc[test_indices]
-
-            train_X = train_data.drop('druggable', axis=1)
-            train_y = train_data['druggable']
-
-            test_X = test_data.drop('druggable', axis=1)
-            test_y = test_data['druggable']
-
-            model = get_model(model_name)
-
-            model.fit(train_X, train_y)
-
-            y_pred = model.predict(test_X)
-
-            accuracy = accuracy_score(test_y, y_pred)
-
-            accuracies.append(accuracy)
-
-        avg_acc = sum(accuracies) / len(accuracies)
+        mean_accuracy = np.mean(scores)
         
-        if (avg_acc > max_acc):
-            max_acc = avg_acc
+        if (mean_accuracy > max_acc):
+            max_acc = mean_accuracy
             best_model = model_name
         
     return(best_model)
@@ -188,8 +157,8 @@ def aggregate_pipeline():
 
     testData = dataset[1]
 
-    full_test_X = testData.drop(columns=['druggable'], axis=1)
-    full_test_y = testData['druggable']
+    full_test_X = testData[0]
+    full_test_y = testData[1]
 
     prediction = model.predict(full_test_X)
 
