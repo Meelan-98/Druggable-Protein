@@ -8,7 +8,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 def process_data(dataname):
 
@@ -114,59 +114,60 @@ def get_model(model_name):
 
     return(model)
 
+def ensemble_pipeline():
+    
+    data_names = ["AAC","DPC","PAAC"]
+    classifier = {"AAC":"Logistic Regression","CTD":"Logistic Regression","DPC":"Logistic Regression","PAAC":"Logistic Regression"}
 
-data_names = ["AAC","DPC","PAAC"]
-classifier = {"AAC":"Logistic Regression","CTD":"Logistic Regression","DPC":"Logistic Regression","PAAC":"Logistic Regression"}
+    results = []
 
-results = []
+    for d_name in data_names:
 
-for d_name in data_names:
+        dataset = process_data(d_name)
+        model = classify_data(dataset[0],classifier[d_name])
 
-    dataset = process_data(d_name)
-    model = classify_data(dataset[0],classifier[d_name])
+        testData = dataset[1]
 
-    testData = dataset[1]
+        full_test_X = testData.drop(columns=['seq_name', 'druggable'], axis=1)
+        full_test_y = testData['druggable']
 
-    full_test_X = testData.drop(columns=['seq_name', 'druggable'], axis=1)
-    full_test_y = testData['druggable']
+        results.append(model.predict(full_test_X))
 
-    results.append(model.predict(full_test_X))
+    sequence_data = testData['seq_name'].tolist()
+    positives = ""
+    negatives = ""
 
-sequence_data = testData['seq_name'].tolist()
-positives = ""
-negatives = ""
+    sum_array = results[0]
 
-sum_array = results[0]
+    for i in range(1,len(data_names)):
+        sum_array = sum_array + results[i]
 
-for i in range(1,len(data_names)):
-    sum_array = sum_array + results[i]
+    combined_array = np.where(sum_array >= 2, 1, 0)
 
-combined_array = np.where(sum_array >= 2, 1, 0)
+    accuracy = accuracy_score(full_test_y, combined_array)
+    sensitivity = recall_score(full_test_y, combined_array)
+    specificity = recall_score(full_test_y, combined_array, pos_label=0)
+    precision = precision_score(full_test_y, combined_array)
+    f1_measure = f1_score(full_test_y, combined_array)
 
-accuracy = accuracy_score(full_test_y, combined_array)
-sensitivity = recall_score(full_test_y, combined_array)
-specificity = recall_score(full_test_y, combined_array, pos_label=0)
-precision = precision_score(full_test_y, combined_array)
-f1_measure = f1_score(full_test_y, combined_array)
-
-print("Overall Accuracy :",accuracy)
-print("Overall Sensitivity :",sensitivity)
-print("Overall Specificity :",specificity)
-print("Overall Precision :",precision)
-print("Overall F1_measure :",f1_measure)
+    print("Overall Accuracy :",accuracy)
+    print("Overall Sensitivity :",sensitivity)
+    print("Overall Specificity :",specificity)
+    print("Overall Precision :",precision)
+    print("Overall F1_measure :",f1_measure)
 
 
-for count in range(0,len(combined_array)):
+    for count in range(0,len(combined_array)):
 
-    if combined_array[count] == 1 :
-        positives = positives + str(sequence_data[count]) + "\n"
-    else:
-        negatives = negatives + str(sequence_data[count]) + "\n"
+        if combined_array[count] == 1 :
+            positives = positives + str(sequence_data[count]) + "\n"
+        else:
+            negatives = negatives + str(sequence_data[count]) + "\n"
 
-with open("predictions_pos.txt", 'w') as file:
-    file.write(positives)
+    with open("predictions_pos.txt", 'w') as file:
+        file.write(positives)
 
-with open("predictions_neg.txt", 'w') as file:
-    file.write(negatives)
+    with open("predictions_neg.txt", 'w') as file:
+        file.write(negatives)
 
 
