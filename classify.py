@@ -1,0 +1,152 @@
+import pandas as pd
+from sklearn.model_selection import KFold
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+import numpy as np
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, f1_score
+
+def process_data(dataname):
+
+    DATA_PATH = "dataset/"
+    FEATURE = dataname
+
+    train_neg = pd.read_csv(DATA_PATH + FEATURE + "_TR_neg_SPIDER.csv")
+    train_pos = pd.read_csv(DATA_PATH + FEATURE + "_TR_pos_SPIDER.csv")
+    test_neg = pd.read_csv(DATA_PATH + FEATURE + "_TS_neg_SPIDER.csv")
+    test_pos = pd.read_csv(DATA_PATH + FEATURE + "_TS_pos_SPIDER.csv")
+
+    train_frames = [train_neg, train_pos]
+    test_frames = [test_neg, test_pos]
+
+    train_df= pd.concat(train_frames)
+    test_df = pd.concat(test_frames)
+
+    columns = list(train_df.columns)
+    columns.remove("druggable")
+    columns.remove("seq_name")
+
+    train_set = train_df.drop(['seq_name'] , axis=1)
+    test_set = test_df.drop(['seq_name'] , axis=1)
+
+    train_final = train_set.copy()
+    test_final = test_set.copy()
+
+    for column in columns:
+        mean = train_set[column].mean()
+        deviation = train_set[column].std()
+
+        train_final[column] = (train_set[column] - mean) / deviation
+        test_final[column] = (test_final[column] - mean) / deviation
+
+    return([train_final,test_final])
+
+
+def classify_data(dataset,classify_type):
+    
+    accuracies = []
+
+    num_folds = 5
+
+    # Split the dataset into folds using KFold
+    kf = KFold(n_splits=num_folds, shuffle=True)
+    fold_indices = kf.split(dataset)
+
+    for fold, (train_indices, test_indices) in enumerate(fold_indices):
+
+        train_data = dataset.iloc[train_indices]
+        test_data = dataset.iloc[test_indices]
+
+        train_X = train_data.drop('druggable', axis=1)
+        train_y = train_data['druggable']
+
+        test_X = test_data.drop('druggable', axis=1)
+        test_y = test_data['druggable']
+
+        model = get_model(classify_type)
+
+        model.fit(train_X, train_y)
+
+        y_pred = model.predict(test_X)
+
+        accuracy = accuracy_score(test_y, y_pred)
+
+        accuracies.append(accuracy)
+
+    full_train_X = dataset.drop('druggable', axis=1)
+    full_train_y = dataset['druggable']
+
+    full_model = get_model(classify_type)
+
+    full_model.fit(full_train_X, full_train_y)
+
+    return(full_model)
+
+def get_model(model_name):
+
+    if(model_name=="Logistic Regression"):
+
+        model = LogisticRegression(max_iter=500)
+    
+    elif(model_name=="Support Vector Machines"):
+
+        model = LinearSVC(max_iter=1000)
+
+    elif(model_name=="Decision Trees"):
+
+        model = DecisionTreeClassifier(max_iter=500)
+
+    elif(model_name=="Random Forest"):
+
+        model = RandomForestClassifier(max_iter=500)
+    
+    elif(model_name=="Naive Bayes"):
+
+        model = GaussianNB(max_iter=500)
+    
+    elif(model_name=="K-Nearest Neighbor"):
+
+        model = KNeighborsClassifier(max_iter=500)
+
+    return(model)
+
+
+data_names = ["AAC","CTD","DPC","PAAC"]
+classifier = {"AAC":"Logistic Regression","CTD":"Logistic Regression","DPC":"Logistic Regression","PAAC":"Logistic Regression"}
+
+results = []
+
+for d_name in data_names:
+
+    dataset = process_data(d_name)
+    model = classify_data(dataset[0],classifier[d_name])
+
+    testData = dataset[1]
+
+    full_test_X = testData.drop('druggable', axis=1)
+    full_test_y = testData['druggable']
+
+    results.append(model.predict(full_test_X))
+
+sum_array = results[0]
+
+for i in range(1,len(data_names)):
+    sum_array = sum_array + results[i]
+
+combined_array = np.where(sum_array >= 2, 1, 0)
+
+accuracy = accuracy_score(full_test_y, combined_array)
+sensitivity = recall_score(full_test_y, combined_array)
+specificity = recall_score(full_test_y, combined_array, pos_label=0)
+precision = precision_score(full_test_y, combined_array)
+f1_measure = f1_score(full_test_y, combined_array)
+
+print("Overall Accuracy :",accuracy)
+print("Overall Sensitivity :",sensitivity)
+print("Overall Specificity :",specificity)
+print("Overall Precision :",precision)
+print("Overall F1_measure :",f1_measure)
